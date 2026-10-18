@@ -961,15 +961,17 @@
       }
 
       function startSynth() {
-        if (!ensureCtx()) return false;
-        if (ctx.state === "suspended") ctx.resume();
+        if (!ensureCtx()) return;
         if (!timer) {
           nextLoop = ctx.currentTime + 0.12;
           tick();
           timer = setInterval(tick, 250);
         }
         mode = "synth";
-        return true;
+        // El botón solo dice "Sonando" si el navegador de verdad dejó sonar el audio
+        var done = function () { playing = ctx.state === "running"; setUI(); };
+        var p = ctx.resume();
+        if (p && p.then) p.then(done, done); else done();
       }
 
       function setUI() {
@@ -987,12 +989,14 @@
           if (ctx && ctx.state === "running") ctx.suspend();
           file.play().then(function () {
             mode = "file"; playing = true; setUI();
-          }).catch(function () {
+          }).catch(function (err) {
+            // Sin permiso del navegador (sin toque): queda en pausa; si el archivo falla, cajita musical
+            if (err && err.name === "NotAllowedError") { playing = false; setUI(); return; }
             fileOk = false;
-            if (startSynth()) { playing = true; setUI(); }
+            startSynth();
           });
-        } else if (startSynth()) {
-          playing = true; setUI();
+        } else {
+          startSynth();
         }
       }
 
