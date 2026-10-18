@@ -868,9 +868,9 @@
       end: new Date("2026-11-07T18:00:00-05:00"),
       rsvpBy: new Date("2026-11-02T23:59:59-05:00"),
       phone: "573225120963",
-      // Si dejas un archivo musica.mp3 en la carpeta, suena ese; si no, una cajita musical con Cumpleaños feliz
-      track: "musica.mp3",
-      trackName: "nuestra canción"
+      // Suena este archivo; si no carga, una cajita musical con Cumpleaños feliz
+      track: "musica.m4a",
+      trackName: "Chiquita"
     };
 
     var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -889,12 +889,12 @@
     /* ================= Música ================= */
     var Music = (function () {
       var ctx = null, master = null, timer = null, nextLoop = 0;
-      var playing = false, mode = null, fileOk = false;
+      // fileOk arranca en true: iPhone no precarga audio antes del primer toque
+      var playing = false, mode = null, fileOk = true;
 
       var file = new Audio();
       file.loop = true;
       file.preload = "auto";
-      file.addEventListener("canplaythrough", function () { fileOk = true; });
       file.addEventListener("error", function () { fileOk = false; });
       file.src = EVENT.track;
 
@@ -986,7 +986,6 @@
       function play() {
         ensureCtx(); // se crea dentro del toque para que iPhone la habilite
         if (fileOk) {
-          if (ctx && ctx.state === "running") ctx.suspend();
           file.play().then(function () {
             mode = "file"; playing = true; setUI();
           }).catch(function (err) {
